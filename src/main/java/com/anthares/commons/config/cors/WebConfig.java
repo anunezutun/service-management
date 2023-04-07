@@ -1,4 +1,4 @@
-package com.anthares.commons.config;
+package com.anthares.commons.config.cors;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
