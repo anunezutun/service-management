@@ -1,6 +1,7 @@
 package com.anthares.commons.config.exception;
 
 import com.anthares.commons.rest.output.FormatOutput;
+import com.anthares.customer.exception.CustomerNotFoundException;
 import com.anthares.user.exception.UserNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,8 +23,21 @@ public class GeneralExceptionHandler {
    */
   @ExceptionHandler(UserNotFoundException.class)
   @ResponseStatus(HttpStatus.NOT_FOUND)
-  public ResponseEntity<FormatOutput<Object>> handleMethodSaleReportNotFoundException(
+  public ResponseEntity<FormatOutput<Object>> handleMethodUserNotFoundException(
       UserNotFoundException exception) {
+    log.error(exception.getMessage(), exception);
+
+    return buildResponse(String.valueOf(HttpStatus.NOT_FOUND.value()),
+        exception.getMessage(), HttpStatus.NOT_FOUND);
+  }
+
+  /** Method.
+   *
+   */
+  @ExceptionHandler(CustomerNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ResponseEntity<FormatOutput<Object>> handleMethodCustomerNotFoundException(
+      CustomerNotFoundException exception) {
     log.error(exception.getMessage(), exception);
 
     return buildResponse(String.valueOf(HttpStatus.NOT_FOUND.value()),

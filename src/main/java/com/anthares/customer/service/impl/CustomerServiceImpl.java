@@ -5,6 +5,7 @@ import com.anthares.commons.model.User;
 import com.anthares.commons.rest.output.FormatOutput;
 import com.anthares.commons.service.CommonService;
 import com.anthares.commons.util.Constants;
+import com.anthares.customer.exception.CustomerNotFoundException;
 import com.anthares.customer.jpa.JpaCustomer;
 import com.anthares.customer.rest.input.CustomerInputDto;
 import com.anthares.customer.rest.output.CustomerDto;
@@ -15,6 +16,7 @@ import com.anthares.user.jpa.JpaUser;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,8 +47,12 @@ public class CustomerServiceImpl extends CommonService implements CustomerServic
   }
 
   @Override
-  public FormatOutput<Customer> updateCustomer(CustomerInputDto updateCustomerInputDto) {
-    return null;
+  public FormatOutput<CustomerDto> updateCustomer(CustomerInputDto updateCustomerInputDto) {
+    var customer = setDataCustomer(updateCustomerInputDto);
+    jpaCustomer.save(customer);
+    return buildResponse(buildCustomerDto(customer),
+        CustomerConstants.CUSTOMER_UPDATED_CODE,
+        CustomerConstants.CUSTOMER_UPDATED_MSG);
   }
 
   private CustomerListDto getCustomerList(User user) {
@@ -80,7 +86,15 @@ public class CustomerServiceImpl extends CommonService implements CustomerServic
 
   @Override
   public FormatOutput<CustomerDto> getCustomer(String customerGuid) {
-    return null;
+    Optional<Customer> customerOptional = jpaCustomer.findByGuid(customerGuid);
+    if (customerOptional.isPresent()) {
+      CustomerDto customerDto = buildCustomerDto(customerOptional.get());
+      return buildResponse(customerDto,
+          CustomerConstants.CUSTOMER_SUCCESS_PROCESS_CODE,
+          CustomerConstants.CUSTOMER_SUCCESS_PROCESS_MSG);
+    } else {
+      throw new CustomerNotFoundException(CustomerConstants.CUSTOMER_NOT_FOUND_MSG);
+    }
   }
 
   private Customer setDataCustomer(CustomerInputDto customerInputDto) {

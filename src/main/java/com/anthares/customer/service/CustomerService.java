@@ -15,7 +15,7 @@ public interface CustomerService {
 
   FormatOutput<CustomerDto> saveCustomer(CustomerInputDto createCustomerInputDto);
 
-  FormatOutput<Customer> updateCustomer(CustomerInputDto updateCustomerInputDto);
+  FormatOutput<CustomerDto> updateCustomer(CustomerInputDto updateCustomerInputDto);
 
   FormatOutput<Collection<CustomerListDto>> listCustomer(String userGuid);
 
