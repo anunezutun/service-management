@@ -72,13 +72,10 @@ public class CustomerServiceImpl extends CommonService implements CustomerServic
   @Override
   public FormatOutput<Collection<CustomerListDto>> listCustomer(String userGuid) {
 
-    var userDefault = jpaUser.findByUsernameIgnoreCase(Constants.ANTHARES_USERNAME);
     var response = new ArrayList<CustomerListDto>();
-    response.add(getCustomerList(userDefault.get()));
-    if (!userDefault.get().getGuid().equals(userGuid)) {
-      var user = jpaUser.findByGuid(userGuid);
-      response.add(getCustomerList(user.get()));
-    }
+    var user = jpaUser.findByGuid(userGuid);
+    response.add(getCustomerList(user.get()));
+
     return buildResponse(response,
         CustomerConstants.CUSTOMER_SUCCESS_PROCESS_CODE,
         CustomerConstants.CUSTOMER_SUCCESS_PROCESS_MSG);

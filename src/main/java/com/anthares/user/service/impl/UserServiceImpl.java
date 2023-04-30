@@ -10,6 +10,7 @@ import com.anthares.user.rest.input.UserInputDto;
 import com.anthares.user.rest.output.UserOutputDto;
 import com.anthares.user.service.UserService;
 import com.anthares.user.util.UserConstants;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -46,33 +47,30 @@ public class UserServiceImpl extends CommonService implements UserService {
 
     User user = setDataUser(updateUserInputDto);
     user = jpaUser.save(user);
-
     return buildResponse(buildUserDto(user),
         UserConstants.USER_UPDATED_CODE,
         UserConstants.USER_UPDATED_MSG);
   }
 
-  /*@Override
-  public UserOutputDto getUserDtoByGuid(String userGuid) {
-
-    Optional<User> optionalUser = jpaUser.findByGuid(userGuid);
-    if (optionalUser.isPresent()) {
-      User user = optionalUser.get();
-      return buildUserDto(user);
-    } else {
-      throw new UserNotFoundException(UserConstants.USER_NOT_FOUND_MSG);
-    }
-  }*/
-
   @Override
   public FormatOutput<UserOutputDto> login(LoginInputDto loginInputDto) {
-    var user = jpaUser.findByUsernameIgnoreCaseAndPassword(
-        loginInputDto.getUsername(), loginInputDto.getPassword());
+
+    var user = jpaUser.findByUsernameIgnoreCase(
+        loginInputDto.getUsername());
 
     if (user.isPresent()) {
-      return buildResponse(buildUserDto(user.get()),
-          UserConstants.USER_SUCCESS_LOGIN_CODE,
-          UserConstants.USER_SUCCESS_LOGIN_MSG);
+
+      byte[] decodedBytes = Base64.getDecoder().decode(user.get().getPassword());
+      String passwordDb = new String(decodedBytes);
+      String passwordInput = loginInputDto.getPassword();
+
+      if (passwordDb.equals(passwordInput)) {
+        return buildResponse(buildUserDto(user.get()),
+            UserConstants.USER_SUCCESS_LOGIN_CODE,
+            UserConstants.USER_SUCCESS_LOGIN_MSG);
+      } else {
+        throw new UserNotFoundException(UserConstants.USER_NOT_FOUND_MSG);
+      }
     } else {
       throw new UserNotFoundException(UserConstants.USER_NOT_FOUND_MSG);
     }
@@ -101,11 +99,16 @@ public class UserServiceImpl extends CommonService implements UserService {
   }
 
   private User setDataUser(UserInputDto userInputDto) {
+
+    String password = Base64
+        .getEncoder()
+        .encodeToString(userInputDto.getPassword().getBytes());
+
     return User.builder()
             .guid(userInputDto.getGuid() != null ? userInputDto.getGuid() : null)
             .names(userInputDto.getNames())
             .username(userInputDto.getUsername())
-            .password(userInputDto.getPassword())
+            .password(password)
             .phoneNumber(userInputDto.getPhoneNumber())
             .email(userInputDto.getEmail())
             .build();
