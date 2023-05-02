@@ -6,6 +6,7 @@ import com.anthares.commons.service.CommonService;
 import com.anthares.notification.jpa.JpaNotification;
 import com.anthares.notification.rest.input.NotificationInputDto;
 import com.anthares.notification.rest.output.NotificationDto;
+import com.anthares.notification.rest.output.NotificationSplitedDto;
 import com.anthares.notification.service.NotificationService;
 import com.anthares.notification.util.NotificationConstants;
 import java.time.LocalDate;
@@ -33,10 +34,9 @@ public class NotificationServiceImpl extends CommonService implements Notificati
   @Override
   public FormatOutput<NotificationDto> saveNotification(
       NotificationInputDto createNotificationInputDto) {
-    createNotificationInputDto.setStatus("active");
+    createNotificationInputDto.setStatus("Pendiente");
     Notification notification = setDataNotification(createNotificationInputDto);
     notification.setCreationDate(LocalDateTime.now());
-
     LocalDate inputDate
         = LocalDate.parse(createNotificationInputDto.getDate());
 
@@ -68,14 +68,30 @@ public class NotificationServiceImpl extends CommonService implements Notificati
   }
 
   @Override
-  public FormatOutput<List<NotificationDto>> listNotification(String userGuid) {
-    Collection<Notification> notificationList = jpaNotification.findByUserGuid(userGuid);
-    List<NotificationDto> notificationOutputDtoList = new ArrayList<>();
+  public FormatOutput<NotificationSplitedDto> listNotification(String userGuid) {
+    Collection<Notification> notificationList =
+        jpaNotification.findByUserGuidOrderByRemindDate(userGuid);
+
+    var notificationSplitedDto = new NotificationSplitedDto();
+
+    List<NotificationDto> sentList = new ArrayList<>();
+    List<NotificationDto> pendingList = new ArrayList<>();
+
     for (Notification notification : notificationList) {
       NotificationDto outputDto = buildNotificationDto(notification);
-      notificationOutputDtoList.add(outputDto);
+      if (outputDto.getStatus().equals("Enviado")) {
+        outputDto.setEditable(Boolean.FALSE);
+        sentList.add(outputDto);
+      } else if (outputDto.getStatus().equals("Pendiente")) {
+        outputDto.setEditable(Boolean.TRUE);
+        pendingList.add(outputDto);
+      }
     }
-    return buildResponse(notificationOutputDtoList,
+
+    notificationSplitedDto.setPendingList(pendingList);
+    notificationSplitedDto.setSentList(sentList);
+
+    return buildResponse(notificationSplitedDto,
         NotificationConstants.NOTIFICATION_SUCCESS_PROCESS_CODE,
         NotificationConstants.NOTIFICATION_SUCCESS_PROCESS_MSG);
   }
@@ -96,7 +112,7 @@ public class NotificationServiceImpl extends CommonService implements Notificati
         .creationDate(notification.getCreationDate())
         .message(notification.getMessage())
         .status(notification.getStatus())
-        .phone(notification.getPhoneNumber())
+        .phoneNumber(notification.getPhoneNumber())
         .build();
   }
 

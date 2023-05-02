@@ -14,6 +14,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Class.
+ *
+ * @author abelK
+ */
 @Component
 @EnableScheduling
 @RequiredArgsConstructor
@@ -25,7 +29,9 @@ public class ScheduleNotificationService {
   private final JpaTwilio jpaTwilio;
   private static final String TIME_ZONE = "America/Lima";
 
-  //@Scheduled(cron = "0 */2 7-19 * * *", zone = TIME_ZONE)
+  /** Method.
+   *
+   */
   @Scheduled(cron = "0 */15 7-19 * * *", zone = TIME_ZONE)
   public void scheduleFixedDelayTask() {
 
@@ -39,14 +45,17 @@ public class ScheduleNotificationService {
     Integer minute = currentDate.getMinute();
     log.info("Looking for notifications ... {}", LocalDateTime.now());
 
-    jpaNotification.findByYearAndMonthAndDayAndHourAndMinute(year, month, day, hour, minute)
+    jpaNotification.findByYearAndMonthAndDayAndHourAndMinuteAndStatus(
+        year, month, day, hour, minute, "Pendiente")
         .forEach(notification -> {
           log.info("Processing notification with id: " + notification.getGuid());
           sendNotification(notification.getPhoneNumber(), notification.getMessage());
+          notification.setStatus("Enviado");
+          jpaNotification.save(notification);
         });
   }
 
-  public void sendNotification(String phone, String messageBody) {
+  private void sendNotification(String phone, String messageBody) {
     String phoneReceiver = Commons.joinString(Constants.WHATS_APP_PREFIX,
         Constants.PERUVIAN_PHONE_CODE, phone);
     var twilio = jpaTwilio.findAll().stream().findFirst().get();
@@ -54,7 +63,8 @@ public class ScheduleNotificationService {
     Message message = Message.creator(
             new com.twilio.type.PhoneNumber(phoneReceiver),
             new com.twilio.type
-                .PhoneNumber(Commons.joinString(Constants.WHATS_APP_PREFIX, twilio.getPhoneServer())),
+                .PhoneNumber(Commons.joinString(Constants.WHATS_APP_PREFIX,
+                twilio.getPhoneServer())),
             messageBody)
         .create();
     //se puede hacer algo con la respuesta

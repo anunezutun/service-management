@@ -31,6 +31,8 @@ public class NotificationDto {
 
   private String status;
 
-  private String phone;
+  private String phoneNumber;
+
+  private Boolean editable;
 
 }
