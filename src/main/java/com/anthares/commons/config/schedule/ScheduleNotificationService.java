@@ -32,7 +32,7 @@ public class ScheduleNotificationService {
   /** Method.
    *
    */
-  @Scheduled(cron = "0 */15 7-19 * * *", zone = TIME_ZONE)
+  @Scheduled(cron = "0 */15 7-21 * * *", zone = TIME_ZONE)
   public void scheduleFixedDelayTask() {
 
     LocalDateTime currentDate
